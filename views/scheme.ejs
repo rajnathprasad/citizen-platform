@@ -1,0 +1,18 @@
+<h1><%= scheme.title %></h1>
+<p><%= scheme.description %></p>
+
+<h3>Comments</h3>
+<% comments.forEach(comment => { %>
+    <div>
+        <strong><%= comment.user %>:</strong> <%= comment.content %>
+        <p><small><%= comment.createdAt.toLocaleString() %></small></p>
+    </div>
+<% }); %>
+
+<h3>Post a Comment</h3>
+<form action="/scheme/<%= scheme._id %>/comments" method="POST">
+    <textarea name="content" required></textarea>
+    <button type="submit">Post Comment</button>
+</form>
+
+<a href="/dashboard">Back to Dashboard</a>

@@ -1,0 +1,22 @@
+<h1>Welcome, <%= user.name %> (Admin)</h1>
+
+<h2>All Schemes:</h2>
+<ul>
+  <% schemes.forEach(scheme => { %>
+    <li>
+      <strong><%= scheme.title %></strong> -
+      <a href="/admin/schemes/edit/<%= scheme._id %>">Edit</a> |
+      <!-- Delete Button -->
+      <form action="/admin/schemes/delete/<%= scheme._id %>?_method=DELETE" method="POST" style="display:inline;">
+        <button type="submit" class="delete-btn">Delete</button>
+      </form>
+    </li>
+  <% }) %>
+</ul>
+
+<a href="/admin/schemes/new">Add New Scheme</a>
+
+<!-- Logout Form -->
+<form action="/logout" method="POST" style="display:inline;">
+  <button type="submit" class="logout-btn">Logout</button>
+</form>
