@@ -3,33 +3,46 @@ const Comment = require('../models/Comment');
 
 // View Scheme + Comments
 exports.viewScheme = async (req, res) => {
-    try {
-        const scheme = await Scheme.findById(req.params.id);
-        const comments = await Comment.find({ scheme: req.params.id }).populate('scheme', 'title');
-        
-        res.render('scheme', { scheme, comments });
-    } catch (err) {
-        console.log('Error fetching scheme:', err);
-        res.send('Error fetching scheme');
+  try {
+    const scheme = await Scheme.findById(req.params.id)
+      .populate('comments') // ✅ this brings the full comment documents
+      .exec();
+
+    if (!scheme) {
+      return res.status(404).send('Scheme not found');
     }
+
+    res.render('scheme', { scheme });
+  } catch (err) {
+    console.error("Error viewing scheme:", err);
+    res.status(500).send("Something went wrong");
+  }
 };
+
 
 // Post Comment
 exports.postComment = async (req, res) => {
-    const { content } = req.body;
-    const user = req.session.user.name; // Assuming user is logged in
+  const { content } = req.body;
+  const user = req.session.user?.name || 'Anonymous';
 
-    try {
-        const newComment = new Comment({
-            scheme: req.params.id,
-            user,
-            content
-        });
+  try {
+    const newComment = new Comment({
+      scheme: req.params.id,
+      user,
+      content
+    });
+    console.log('Incoming comment:', content, 'by', user);
 
-        await newComment.save();
-        res.redirect(`/scheme/${req.params.id}`);
-    } catch (err) {
-        console.log('Error posting comment:', err);
-        res.send('Error posting comment');
-    }
+    const savedComment = await newComment.save();
+
+    await Scheme.findByIdAndUpdate(req.params.id, {
+      $push: { comments: savedComment._id }
+    });
+
+    res.redirect(`/scheme/${req.params.id}`);
+  } catch (err) {
+    console.error('Error posting comment:', err);  // Show exact error
+    res.status(500).send('Error posting comment');
+  }
 };
+

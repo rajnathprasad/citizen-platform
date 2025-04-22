@@ -1,18 +1,39 @@
-<h1><%= scheme.title %></h1>
-<p><%= scheme.description %></p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= scheme.title %></title>
+  <link rel="stylesheet" href="/css/scheme.css">
+</head>
+<body>
+  <div class="scheme-container">
+    <h1><%= scheme.title %></h1>
+    <p><%= scheme.description %></p>
 
-<h3>Comments</h3>
-<% comments.forEach(comment => { %>
-    <div>
-        <strong><%= comment.user %>:</strong> <%= comment.content %>
-        <p><small><%= comment.createdAt.toLocaleString() %></small></p>
+    <hr>
+
+    <h3>Comments</h3>
+    <div class="comments-section">
+      <% if (scheme.comments.length > 0) { %>
+        <% scheme.comments.forEach(comment => { %>
+          <div class="comment">
+            <strong><%= comment.user %>:</strong>
+            <p><%= comment.content %></p>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <p>No comments yet.</p>
+      <% } %>
     </div>
-<% }); %>
 
-<h3>Post a Comment</h3>
-<form action="/scheme/<%= scheme._id %>/comments" method="POST">
-    <textarea name="content" required></textarea>
-    <button type="submit">Post Comment</button>
-</form>
+    <form class="comment-form" method="POST" action="/scheme/<%= scheme._id %>/comment">
+      <textarea name="content" placeholder="Add your comment..." required></textarea>
+      <button type="submit">Post Comment</button>
+    </form>
 
-<a href="/dashboard">Back to Dashboard</a>
+    <a class="back-link" href="/dashboard">← Back to Dashboard</a>
+  </div>
+
+  <script src="/js/scheme.js"></script>
+</body>
+</html>

@@ -5,13 +5,23 @@ exports.renderProfilePage = (req, res) => {
 };
 
 exports.updateProfile = async (req, res) => {
-    const { name, email } = req.body;
     try {
-        const updatedUser = await User.findByIdAndUpdate(req.session.user._id, { name, email }, { new: true });
+        const userId = req.session.userId;
+        const { name, email, phone, aadhaar } = req.body;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { name, email, phone, aadhaar },
+            { new: true }  // ✅ return the updated document
+        );
+
+        // ✅ Update session data with new info
         req.session.user = updatedUser;
-        res.redirect('/profile');
+
+        res.redirect('/dashboard');
     } catch (err) {
-        console.log('Profile update error:', err);
-        res.send('Error updating profile');
+        console.error(err);
+        res.status(500).send('Server Error');
     }
 };
+

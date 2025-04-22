@@ -1,7 +1,35 @@
-<h1>Profile</h1>
-<form method="POST" action="/profile">
-    <input name="name" value="<%= user.name %>" required />
-    <input name="email" value="<%= user.email %>" required />
-    <button type="submit">Update</button>
-</form>
-<a href="/dashboard">Back to Dashboard</a>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Your Profile</title>
+  <link rel="stylesheet" href="/css/userDashboard.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="dashboard-header">
+    <h1>Your Profile</h1>
+    <div class="nav-links">
+      <a href="/dashboard">Back to Dashboard</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <form method="POST" action="/profile" class="profile-form">
+      <label for="name">Name</label>
+      <input id="name" name="name" type="text" value="<%= user.name %>" required />
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" value="<%= user.email %>" required />
+
+      <label for="phone">Phone Number</label>
+      <input id="phone" name="phone" type="text" value="<%= user.phone %>" required />
+
+      <label for="aadhaar">Aadhaar Number</label>
+      <input id="aadhaar" name="aadhaar" type="text" value="<%= user.aadhaar %>" required />
+
+      <button type="submit">Update Profile</button>
+    </form>
+  </div>
+</body>
+</html>

@@ -2,22 +2,25 @@
 <html>
 <head>
     <title>Dashboard</title>
+    <link rel="stylesheet" href="/css/userDashboard.css">
 </head>
 <body>
-    <h1>Welcome, <%= user.name %>!</h1>
-    <p>Your email: <%= user.email %></p>
+    <div class="dashboard-header">
+        <h1>Welcome, <%= user.name %>!</h1>
+        <div class="nav-links">
+            <a href="/profile">View/Edit Profile</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+
     <div class="scheme-list">
         <% schemes.forEach(scheme => { %>
-          <div class="scheme-card">
-            <h3><%= scheme.title %></h3>
-            <p><%= scheme.description.substring(0, 100) %>...</p>
-            <a href="/scheme/<%= scheme._id %>">View More</a>
-          </div>
+            <div class="scheme-card">
+                <h3><%= scheme.title %></h3>
+                <p><%= scheme.description.substring(0, 100) %>...</p>
+                <a href="/scheme/<%= scheme._id %>">View More</a>
+            </div>
         <% }) %>
-      </div>
-    <a href="/profile">View/Edit Profile</a>
-    <a href="/logout">Logout</a>
-
-    <!-- You can show schemes, cards, etc. here -->
+    </div>
 </body>
 </html>

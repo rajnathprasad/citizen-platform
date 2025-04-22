@@ -1,12 +1,14 @@
 const mongoose = require('mongoose');
 
 const schemeSchema = new mongoose.Schema({
-    title: String,
-    description: String,
-    createdAt: {
-        type: Date,
-        default: Date.now
+  title: String,
+  description: String,
+  comments: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Comment'
     }
+  ]
 });
 
 module.exports = mongoose.model('Scheme', schemeSchema);
