@@ -1,40 +1,41 @@
 const express = require('express');
 const router = express.Router();
-require('dotenv').config(); // Make sure .env variables are loaded
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-// Initialize Gemini model
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-let model;
-try {
-  model = genAI.getGenerativeModel({ model: "gemini-pro" });
-} catch (err) {
-  console.error("❌ Error initializing Gemini model:", err.message);
-}
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 router.post('/gemini-chat', async (req, res) => {
-  try {
-    const { message, chatHistory } = req.body;
+  const { message } = req.body;
 
-    if (!model) {
-      throw new Error("Gemini model not initialized.");
+  try {
+    // Updated API endpoint to use the latest version
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ 
+            role: "user",
+            parts: [{ text: message }] 
+          }]
+        })
+      }
+    );
+
+    const data = await response.json();
+    
+    // Updated path to extract the response text
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!reply) {
+      console.error('Gemini API response missing expected content:', data);
+      return res.status(500).json({ error: 'Invalid response from Gemini API' });
     }
 
-    console.log('📩 Message received:', message);
-    console.log('📜 Chat history:', chatHistory);
-
-    const chat = model.startChat({ history: chatHistory || [] });
-    const result = await chat.sendMessage(message);
-    const reply = result.response.text();
-
-    console.log('🤖 Gemini replied:', reply);
     res.json({ reply });
-
   } catch (err) {
-    console.error('❌ Gemini API error:', err);
-    res.status(500).json({ reply: "Sorry, something went wrong with Gemini." });
+    console.error('❌ Gemini error:', err);
+    res.status(500).json({ error: 'Gemini API failed.' });
   }
 });
 
