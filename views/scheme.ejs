@@ -69,19 +69,17 @@
   <script>
     const userName = "<%= user.name %>";
     const schemeName = "<%= scheme.schemeName %>";
+    const schemeDescription = `<%= scheme.schemeDescription.replace(/"/g, '\\"') %>`;
+
     const chatBox = document.getElementById('chat-box');
     const input = document.getElementById('user-input');
-    const chatHistory = [];
 
-    async function sendToGemini(message) {
-      const res = await fetch('/api/gemini-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, chatHistory })
-      });
-      const data = await res.json();
-      return data.reply;
-    }
+    const chatHistory = [
+      {
+        role: "system",
+        content: `You are an assistant that gives short replies. The user is ${userName}. The scheme is called "${schemeName}" and here is what it's about: "${schemeDescription}". Only respond concisely.`
+      }
+    ];
 
     function addToChat(sender, text) {
       const el = document.createElement('div');
@@ -90,11 +88,24 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
+    async function sendToGemini(message) {
+      chatHistory.push({ role: "user", content: message });
+
+      const res = await fetch('/api/gemini-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatHistory })
+      });
+
+      const data = await res.json();
+      const reply = data.reply;
+      chatHistory.push({ role: "assistant", content: reply });
+      return reply;
+    }
+
     (async () => {
-      const initMsg = `I want only short responses and my name is ${userName}. We're talking about the ${schemeName} scheme by Indian govt, let's talk about it.`;
-      const reply = await sendToGemini(initMsg);
-      addToChat("TechSmiths ", reply);
-      chatHistory.push({ role: "user", content: initMsg }, { role: "assistant", content: reply });
+      const reply = await sendToGemini("Hello");
+      addToChat("TechSmiths", reply);
     })();
 
     input.addEventListener('keypress', async (e) => {
@@ -102,11 +113,9 @@
         const userMsg = input.value.trim();
         if (!userMsg) return;
         addToChat(userName, userMsg);
-        chatHistory.push({ role: "user", content: userMsg });
         input.value = '';
         const reply = await sendToGemini(userMsg);
-        addToChat("TechSmiths ", reply);
-        chatHistory.push({ role: "assistant", content: reply });
+        addToChat("TechSmiths", reply);
       }
     });
   </script>
