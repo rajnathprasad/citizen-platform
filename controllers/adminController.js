@@ -1,9 +1,12 @@
 const Scheme = require("../models/Scheme");
 
+// Sanitize boolean string values
+const sanitizeBoolean = (val) => val === 'true';
+
+// Render Admin Dashboard
 exports.renderAdminDashboard = async (req, res) => {
   if (!req.session.user || !req.session.user.isAdmin) {
-    console.log("Inside Admin Dashboard - session user:", req.session.user);
-    return res.redirect("/dashboard");  // Regular user dashboard route
+    return res.redirect("/user/dashboard");
   }
 
   try {
@@ -15,69 +18,121 @@ exports.renderAdminDashboard = async (req, res) => {
   }
 };
 
+// Render Add Scheme Form
 exports.renderAddSchemeForm = (req, res) => {
-    res.render("addScheme");
-  };
-  
-  exports.addNewScheme = async (req, res) => {
-    const { title, description } = req.body;
-  
-    try {
-      const newScheme = new Scheme({ title, description });
-      await newScheme.save();
-      res.redirect("/admin/dashboard");
-    } catch (err) {
-      console.error("Error adding new scheme:", err);
-      res.status(500).send("Failed to add scheme");
-    }
-  };
-
-  exports.renderEditSchemeForm = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const scheme = await Scheme.findById(id);
-        if (!scheme) {
-            return res.status(404).send("Scheme not found");
-        }
-        res.render("editScheme", { scheme });
-    } catch (err) {
-        console.error("Error loading scheme for editing:", err);
-        res.status(500).send("Internal Server Error");
-    }
+  res.render("addScheme");
 };
 
-exports.updateScheme = async (req, res) => {
-  const { id } = req.params;
-  const { title, description } = req.body;
+// Add New Scheme
+exports.addNewScheme = async (req, res) => {
+  console.log("Uploaded Image:", req.file);
 
   try {
-      const scheme = await Scheme.findById(id);
-      if (!scheme) {
-          return res.status(404).send("Scheme not found");
-      }
+    const {
+      schemeName,
+      schemeDescription,
+      gender,
+      maritalStatus,
+      income,
+      occupation,
+      educationLevel,
+      state,
+      ruralOrUrban,
+      videoLink
+    } = req.body;
 
-      scheme.title = title;
-      scheme.description = description;
+    const newScheme = new Scheme({
+      schemeName,
+      schemeDescription,
+      gender: gender || undefined,
+      maritalStatus: maritalStatus || undefined,
+      income: income || undefined,
+      occupation: occupation || undefined,
+      educationLevel: educationLevel || undefined,
+      state: state || undefined,
+      ruralOrUrban: ruralOrUrban || undefined,
+      videoLink: videoLink || undefined,
+      hasGirlChild: sanitizeBoolean(req.body.hasGirlChild),
+      isFarmer: sanitizeBoolean(req.body.isFarmer),
+      isPregnantOrMother: sanitizeBoolean(req.body.isPregnantOrMother),
+      isDisabled: sanitizeBoolean(req.body.isDisabled),
+      image: req.file ? "/uploads/" + req.file.filename : undefined
+    });
 
-      await scheme.save();
-      res.redirect("/admin/dashboard");  // Redirect to the admin dashboard after update
-  } catch (err) {
-      console.error("Error updating scheme:", err);
-      res.status(500).send("Failed to update scheme");
+    await newScheme.save();
+    res.redirect("/admin/dashboard");
+  } catch (error) {
+    console.error("Error adding scheme:", error);
+    res.status(400).send("Error adding scheme");
   }
 };
 
-exports.deleteScheme = async (req, res) => {
-  const { id } = req.params;
-
+// Render Edit Scheme Form
+exports.renderEditSchemeForm = async (req, res) => {
   try {
-      const scheme = await Scheme.findByIdAndDelete(id);
-      if (!scheme) {
-          return res.status(404).send("Scheme not found");
-      }
-      res.redirect("/admin/dashboard");  // Redirect to the admin dashboard after deleting the scheme
+    const scheme = await Scheme.findById(req.params.id);
+    if (!scheme) {
+      return res.status(404).send("Scheme not found");
+    }
+    res.render("editScheme", { scheme });
   } catch (err) {
-      console.error("Error deleting scheme:", err);
-      res.status(500).send("Failed to delete scheme");
+    console.error("Error loading scheme for editing:", err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+// Update Scheme
+exports.updateScheme = async (req, res) => {
+  try {
+    const {
+      schemeName,
+      schemeDescription,
+      gender,
+      maritalStatus,
+      income,
+      occupation,
+      educationLevel,
+      state,
+      ruralOrUrban,
+      videoLink
+    } = req.body;
+
+    const updateData = {
+      schemeName,
+      schemeDescription,
+      gender: gender || undefined,
+      maritalStatus: maritalStatus || undefined,
+      income: income || undefined,
+      occupation: occupation || undefined,
+      educationLevel: educationLevel || undefined,
+      state: state || undefined,
+      ruralOrUrban: ruralOrUrban || undefined,
+      videoLink: videoLink || undefined,
+      hasGirlChild: sanitizeBoolean(req.body.hasGirlChild),
+      isFarmer: sanitizeBoolean(req.body.isFarmer),
+      isPregnantOrMother: sanitizeBoolean(req.body.isPregnantOrMother),
+      isDisabled: sanitizeBoolean(req.body.isDisabled)
+    };
+
+    if (req.file) {
+      updateData.image = "/uploads/" + req.file.filename;
+    }
+
+    await Scheme.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    res.redirect("/admin/dashboard");
+  } catch (err) {
+    console.error("Error updating scheme:", err);
+    res.status(500).send("Error updating scheme");
+  }
+};
+
+// Delete Scheme
+exports.deleteScheme = async (req, res) => {
+  try {
+    await Scheme.findByIdAndDelete(req.params.id);
+    res.redirect("/admin/dashboard");
+  } catch (err) {
+    console.error("Error deleting scheme:", err);
+    res.status(500).send("Server error");
   }
 };

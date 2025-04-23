@@ -55,33 +55,34 @@ exports.handleUserSignup = async (req, res) => {
 // ✅ Login Logic
 exports.handleUserLogin = async (req, res) => {
     const { email, password } = req.body;
-
+  
     try {
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.send('Invalid email or password');
-        }
-
-        const match = await bcrypt.compare(password, user.password);
-        if (!match) {
-            return res.send('Invalid email or password');
-        }
-
-        // ✅ Store user ID and object in session
-        req.session.userId = user._id;
-        req.session.user = user;
-
-        // Check if admin
-        if (user.isAdmin) {
-            return res.redirect('/admin/dashboard');
-        } else {
-            return res.redirect('/dashboard');
-        }
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.send('Invalid email or password');
+      }
+  
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) {
+        return res.send('Invalid email or password');
+      }
+  
+      // Store user ID and object in session
+      req.session.userId = user._id;
+      req.session.user = user;
+  
+      // Check if admin
+      if (user.isAdmin) {
+        return res.redirect('/admin/dashboard');
+      } else {
+        return res.redirect('/user/dashboard');
+      }
     } catch (err) {
-        console.error('Login error:', err);
-        res.send('Error during login');
+      console.error('Login error:', err);
+      res.send('Error during login');
     }
-};
+  };
+  
 
 // Logout
 exports.handleLogout = (req, res) => {

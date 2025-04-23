@@ -4,18 +4,18 @@ const Comment = require('../models/Comment');
 // View Scheme + Comments
 exports.viewScheme = async (req, res) => {
   try {
-    const scheme = await Scheme.findById(req.params.id)
-      .populate('comments') // ✅ this brings the full comment documents
-      .exec();
+    const scheme = await Scheme.findById(req.params.id).populate('comments');
+    const user = req.session.user; // Get user from session
 
-    if (!scheme) {
-      return res.status(404).send('Scheme not found');
-    }
+    if (!scheme) return res.status(404).send('Scheme not found');
 
-    res.render('scheme', { scheme });
+    res.render('scheme', {
+      scheme,
+      user // 👈 THIS LINE FIXES IT
+    });
   } catch (err) {
-    console.error("Error viewing scheme:", err);
-    res.status(500).send("Something went wrong");
+    console.error('Error loading scheme:', err);
+    res.status(500).send('Something went wrong');
   }
 };
 

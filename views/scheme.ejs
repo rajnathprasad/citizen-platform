@@ -2,13 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title><%= scheme.title %></title>
+  <title><%= scheme.schemeName %></title>
   <link rel="stylesheet" href="/css/scheme.css">
 </head>
 <body>
   <div class="scheme-container">
-    <h1><%= scheme.title %></h1>
-    <p><%= scheme.description %></p>
+    <h1><%= scheme.schemeName %></h1>
+
+    <% if (scheme.videoLink) { 
+        let videoId;
+        if (scheme.videoLink.includes("youtube.com/watch?v=")) {
+          videoId = scheme.videoLink.split("v=")[1].split("&")[0];
+        } else if (scheme.videoLink.includes("youtu.be/")) {
+          videoId = scheme.videoLink.split("youtu.be/")[1].split("?")[0];
+        }
+        let embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    %>
+      <div class="video-container">
+        <iframe 
+          width="100%" 
+          height="315" 
+          src="<%= embedUrl %>" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen>
+        </iframe>
+      </div>
+    <% } %>
+
+    <p><%= scheme.schemeDescription %></p>
 
     <hr>
 
@@ -33,6 +55,57 @@
 
     <a class="back-link" href="/dashboard">← Back to Dashboard</a>
   </div>
+  <div id="chat-container" style="border: 1px solid #ccc; padding: 1rem; max-width: 400px;">
+  <div id="chat-box" style="height: 200px; overflow-y: auto; margin-bottom: 1rem;"></div>
+  <input type="text" id="user-input" placeholder="Type your message..." style="width: 100%;" />
+</div>
+
+<script>
+  const userName = "<%= user.name %>";
+  const schemeName = "<%= scheme.schemeName %>";
+  const chatBox = document.getElementById('chat-box');
+  const input = document.getElementById('user-input');
+
+  const chatHistory = [];
+
+  async function sendToGemini(message) {
+    const res = await fetch('/api/gemini-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, chatHistory })
+    });
+    const data = await res.json();
+    return data.reply;
+  }
+
+  function addToChat(sender, text) {
+    const el = document.createElement('div');
+    el.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    chatBox.appendChild(el);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // Initial prompt
+  (async () => {
+    const initMsg = `I want only short responses and my name is ${userName}. We're talking about the ${schemeName} scheme by Indian govt, let's talk about it.`;
+    const reply = await sendToGemini(initMsg);
+    addToChat("Gemini", reply);
+    chatHistory.push({ role: "user", content: initMsg }, { role: "assistant", content: reply });
+  })();
+
+  input.addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter') {
+      const userMsg = input.value.trim();
+      if (!userMsg) return;
+      addToChat(userName, userMsg);
+      chatHistory.push({ role: "user", content: userMsg });
+      input.value = '';
+      const reply = await sendToGemini(userMsg);
+      addToChat("Gemini", reply);
+      chatHistory.push({ role: "assistant", content: reply });
+    }
+  });
+</script>
 
   <script src="/js/scheme.js"></script>
 </body>
